@@ -1,0 +1,5 @@
+name: MineralDatabaseAPI
+version: .dev1
+author: OpaqueEclipse
+main: gg.mineral.database.DatabaseAPIPlugin
+description: Database API Plugin!
