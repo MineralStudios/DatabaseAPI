@@ -1,2 +1,2 @@
-# Practice
-The practice plugin used on Mineral.gg
+# MineralDatabaseAPI
+The database plugin used on Mineral.gg
