@@ -1,5 +1,7 @@
 package gg.mineral.database;
 
+import java.util.Optional;
+
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.event.Listener;
@@ -31,8 +33,9 @@ public class DatabaseAPIPlugin extends JavaPlugin {
         getLogger().info("Connecting to database...");
 
         if (!sqlManager.connect(host, port, username, password, database)) {
-            getLogger().info("Failed to connect to database. Disabling plugin.");
-            Bukkit.getPluginManager().disablePlugin(this);
+            getLogger().info("Failed to connect to database.");
+            sqlManager.close();
+            sqlManager = null;
             return;
         }
 
@@ -57,5 +60,9 @@ public class DatabaseAPIPlugin extends JavaPlugin {
         for (Listener l : listeners)
             Bukkit.getPluginManager().registerEvents(l, this);
 
+    }
+
+    public Optional<SQLManager> retrieveSqlManager() {
+        return getSqlManager() == null ? Optional.empty() : Optional.of(getSqlManager());
     }
 }

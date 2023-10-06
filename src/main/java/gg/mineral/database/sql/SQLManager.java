@@ -1,13 +1,13 @@
 package gg.mineral.database.sql;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.concurrent.CompletableFuture;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class SQLManager {
 
@@ -29,22 +29,28 @@ public class SQLManager {
         }
     }
 
-    public CompletableFuture<ResultSet> executeQuery(String query) {
+    public CompletableFuture<ResultSet> executeQuery(String query, Object... parameters) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection connection = dataSource.getConnection();
-                    Statement statement = connection.createStatement()) {
-                return statement.executeQuery(query);
+                    PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                for (int i = 0; i < parameters.length; i++) {
+                    preparedStatement.setObject(i + 1, parameters[i]);
+                }
+                return preparedStatement.executeQuery();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    public CompletableFuture<Boolean> executeStatement(String statementStr) {
+    public CompletableFuture<Boolean> executeStatement(String statementStr, Object... parameters) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection connection = dataSource.getConnection();
-                    Statement statement = connection.createStatement()) {
-                statement.execute(statementStr);
+                    PreparedStatement preparedStatement = connection.prepareStatement(statementStr)) {
+                for (int i = 0; i < parameters.length; i++) {
+                    preparedStatement.setObject(i + 1, parameters[i]);
+                }
+                preparedStatement.execute();
                 return true;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
