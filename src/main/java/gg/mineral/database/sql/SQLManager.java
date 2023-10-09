@@ -29,14 +29,17 @@ public class SQLManager {
         }
     }
 
-    public CompletableFuture<ResultSet> executeQuery(String query, Object... parameters) {
+    public CompletableFuture<QueryResult> executeQuery(String query, Object... parameters) {
         return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = dataSource.getConnection();
-                    PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-                for (int i = 0; i < parameters.length; i++) {
+            try {
+                Connection connection = dataSource.getConnection();
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+
+                for (int i = 0; i < parameters.length; i++)
                     preparedStatement.setObject(i + 1, parameters[i]);
-                }
-                return preparedStatement.executeQuery();
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+                return new QueryResult(connection, preparedStatement, resultSet);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
