@@ -50,9 +50,9 @@ public class SQLManager {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection connection = dataSource.getConnection();
                     PreparedStatement preparedStatement = connection.prepareStatement(statementStr)) {
-                for (int i = 0; i < parameters.length; i++) {
+                for (int i = 0; i < parameters.length; i++)
                     preparedStatement.setObject(i + 1, parameters[i]);
-                }
+
                 preparedStatement.execute();
                 return true;
             } catch (SQLException e) {
@@ -63,8 +63,7 @@ public class SQLManager {
 
     // Close the data source when done
     public void close() {
-        if (dataSource != null && !dataSource.isClosed()) {
+        if (dataSource != null && !dataSource.isClosed())
             dataSource.close();
-        }
     }
 }
