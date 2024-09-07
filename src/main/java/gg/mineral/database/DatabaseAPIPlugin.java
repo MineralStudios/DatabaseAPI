@@ -2,18 +2,18 @@ package gg.mineral.database;
 
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import gg.mineral.database.sql.SQLManager;
 import lombok.Getter;
-import net.minecraft.server.v1_8_R3.MinecraftServer;
 
 public class DatabaseAPIPlugin extends JavaPlugin {
     public static DatabaseAPIPlugin INSTANCE;
     @Getter
+    @Nullable
     SQLManager sqlManager = new SQLManager();
 
     @Override
@@ -38,28 +38,13 @@ public class DatabaseAPIPlugin extends JavaPlugin {
             sqlManager = null;
             return;
         }
-
-        registerCommands();
-
-        registerListeners();
     }
 
     @Override
     public void onDisable() {
-        getSqlManager().close();
+        if (getSqlManager() != null)
+            getSqlManager().close();
         Bukkit.getServer().getScheduler().cancelTasks(this);
-    }
-
-    public void registerCommands(Command... cmds) {
-        for (Command c : cmds)
-            MinecraftServer.getServer().server.getCommandMap().registerOverride(c.getName(), "DatabaseAPI", c);
-
-    }
-
-    public void registerListeners(Listener... listeners) {
-        for (Listener l : listeners)
-            Bukkit.getPluginManager().registerEvents(l, this);
-
     }
 
     public Optional<SQLManager> retrieveSqlManager() {

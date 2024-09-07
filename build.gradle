@@ -7,13 +7,21 @@ version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/MineralStudios/MineralSpigot")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.token") ?: System.getenv("TOKEN")
+        }
+    }
 }
 
 dependencies {
-    compileOnly files('lib/spigot.jar')
-    implementation 'com.zaxxer:HikariCP:2.4.5'
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20240906-10.04.46'
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 }
 
 java {
@@ -23,7 +31,6 @@ java {
 }
 
 jar {
-    archiveFileName = 'MineralDatabaseAPI.jar'
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
