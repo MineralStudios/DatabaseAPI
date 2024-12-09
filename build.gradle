@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20241123-21.47.00'
+    compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20241208-18.55.59'
     implementation 'com.zaxxer:HikariCP:6.2.1'
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
