@@ -1,69 +1,78 @@
-package gg.mineral.database.sql;
+package gg.mineral.database.sql
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.concurrent.CompletableFuture;
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import java.sql.SQLException
+import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+class SQLManager {
+    private var dataSource: HikariDataSource? = null
 
-public class SQLManager {
-
-    private HikariDataSource dataSource;
-
-    public boolean connect(String host, String port, String username, String password, String database) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(String.format("jdbc:mysql://%s:%s/%s", host, port, database));
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setMaximumPoolSize(15); // You can adjust this as needed
+    fun connect(host: String, port: String, username: String, password: String, database: String): Boolean {
+        val config = HikariConfig()
+        config.jdbcUrl = String.format("jdbc:mysql://%s:%s/%s", host, port, database)
+        config.username = username
+        config.password = password
+        config.maximumPoolSize = 15 // You can adjust this as needed
 
         try {
-            dataSource = new HikariDataSource(config);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            dataSource = HikariDataSource(config)
+            return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
         }
     }
 
-    public CompletableFuture<QueryResult> executeQuery(String query, Object... parameters) {
-        return CompletableFuture.supplyAsync(() -> {
+    fun executeQuery(
+        query: String?,
+        consumer: Consumer<QueryResult>,
+        vararg parameters: Any?
+    ): CompletableFuture<Void> {
+        return CompletableFuture.runAsync {
             try {
-                Connection connection = dataSource.getConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                dataSource?.let {
+                    it.connection.use { connection ->
+                        connection.prepareStatement(query).use { preparedStatement ->
+                            // Set parameters
+                            for (i in parameters.indices) {
+                                preparedStatement.setObject(i + 1, parameters[i])
+                            }
 
-                for (int i = 0; i < parameters.length; i++)
-                    preparedStatement.setObject(i + 1, parameters[i]);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-                return new QueryResult(connection, preparedStatement, resultSet);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+                            // Execute the query and use the result set
+                            preparedStatement.executeQuery().use { resultSet ->
+                                // Pass the result to the consumer
+                                consumer.accept(QueryResult(connection, preparedStatement, resultSet))
+                            }
+                        }
+                    }
+                } ?: throw IllegalStateException("Data source is null")
+                // Ensure the connection is closed using `use`
+            } catch (e: SQLException) {
+                throw RuntimeException(e)
             }
-        });
+        }
     }
 
-    public CompletableFuture<Boolean> executeStatement(String statementStr, Object... parameters) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Connection connection = dataSource.getConnection();
-                    PreparedStatement preparedStatement = connection.prepareStatement(statementStr)) {
-                for (int i = 0; i < parameters.length; i++)
-                    preparedStatement.setObject(i + 1, parameters[i]);
-
-                preparedStatement.execute();
-                return true;
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+    fun executeStatement(statementStr: String?, vararg parameters: Any?): CompletableFuture<Boolean> {
+        return CompletableFuture.supplyAsync {
+            try {
+                dataSource!!.connection.use { connection ->
+                    connection.prepareStatement(statementStr).use { preparedStatement ->
+                        for (i in parameters.indices) preparedStatement.setObject(i + 1, parameters[i])
+                        preparedStatement.execute()
+                        return@supplyAsync true
+                    }
+                }
+            } catch (e: SQLException) {
+                throw RuntimeException(e)
             }
-        });
+        }
     }
 
     // Close the data source when done
-    public void close() {
-        if (dataSource != null && !dataSource.isClosed())
-            dataSource.close();
+    fun close() {
+        if (dataSource != null && !dataSource!!.isClosed) dataSource!!.close()
     }
 }

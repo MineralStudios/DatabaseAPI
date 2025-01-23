@@ -1,53 +1,36 @@
-package gg.mineral.database;
+package gg.mineral.database
 
-import java.util.Optional;
+import gg.mineral.database.sql.SQLManager
+import org.bukkit.Bukkit
+import org.bukkit.plugin.java.JavaPlugin
 
-import javax.annotation.Nullable;
-
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import gg.mineral.database.sql.SQLManager;
-import lombok.Getter;
-
-public class DatabaseAPIPlugin extends JavaPlugin {
-    public static DatabaseAPIPlugin INSTANCE;
-    @Getter
-    @Nullable
-    SQLManager sqlManager = new SQLManager();
-
-    @Override
-    public void onEnable() {
-
-        INSTANCE = this;
-
-        saveDefaultConfig();
-        reloadConfig();
-
-        String host = getConfig().getString("host", "host");
-        String port = getConfig().getString("port", "3306");
-        String database = getConfig().getString("database", "database");
-        String username = getConfig().getString("username", "username");
-        String password = getConfig().getString("password", "password");
-
-        getLogger().info("Connecting to database...");
-
+class DatabaseAPIPlugin : JavaPlugin() {
+    private val host: String by lazy { config.getString("host", "host") }
+    private val port: String by lazy { config.getString("port", "3306") }
+    private val database: String by lazy { config.getString("database", "database") }
+    private val username: String by lazy { config.getString("username", "username") }
+    private val password: String by lazy { config.getString("password", "password") }
+    val sqlManager: SQLManager? by lazy {
+        val sqlManager = SQLManager()
         if (!sqlManager.connect(host, port, username, password, database)) {
-            getLogger().info("Failed to connect to database.");
-            sqlManager.close();
-            sqlManager = null;
-            return;
-        }
+            logger.info("Failed to connect to database.")
+            sqlManager.close()
+            null
+        } else sqlManager
     }
 
-    @Override
-    public void onDisable() {
-        if (getSqlManager() != null)
-            getSqlManager().close();
-        Bukkit.getServer().getScheduler().cancelTasks(this);
+    override fun onEnable() {
+        INSTANCE = this
+        saveDefaultConfig()
+        reloadConfig()
     }
 
-    public Optional<SQLManager> retrieveSqlManager() {
-        return getSqlManager() == null ? Optional.empty() : Optional.of(getSqlManager());
+    override fun onDisable() {
+        sqlManager?.close()
+        Bukkit.getServer().scheduler.cancelTasks(this)
+    }
+
+    companion object {
+        lateinit var INSTANCE: DatabaseAPIPlugin
     }
 }
