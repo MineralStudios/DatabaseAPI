@@ -7,7 +7,7 @@ import java.sql.ResultSet
 class QueryResult(
     private val connection: Connection,
     private val preparedStatement: PreparedStatement,
-    private val resultSet: ResultSet
+    val resultSet: ResultSet
 ) : AutoCloseable {
     @Throws(Exception::class)
     override fun close() {

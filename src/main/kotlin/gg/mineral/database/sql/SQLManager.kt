@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
-import java.util.function.Consumer
 
 class SQLManager {
     private var dataSource: HikariDataSource? = null
@@ -27,7 +26,7 @@ class SQLManager {
 
     fun executeQuery(
         query: String?,
-        consumer: Consumer<QueryResult>,
+        consumer: CompletableFuture<QueryResult>,
         vararg parameters: Any?
     ): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
@@ -43,7 +42,7 @@ class SQLManager {
                             // Execute the query and use the result set
                             preparedStatement.executeQuery().use { resultSet ->
                                 // Pass the result to the consumer
-                                consumer.accept(QueryResult(connection, preparedStatement, resultSet))
+                                consumer.complete(QueryResult(connection, preparedStatement, resultSet))
                             }
                         }
                     }
