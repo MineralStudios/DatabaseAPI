@@ -24,35 +24,33 @@ class SQLManager {
         }
     }
 
-    fun executeQuery(
-        query: String?,
-        consumer: CompletableFuture<QueryResult>,
+    fun <T> executeQuery(
+        query: String,
+        function: (QueryResult) -> T,
         vararg parameters: Any?
-    ): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
+    ): CompletableFuture<T> {
+        return CompletableFuture.supplyAsync {
             try {
-                dataSource?.let {
-                    it.connection.use { connection ->
-                        connection.prepareStatement(query).use { preparedStatement ->
-                            // Set parameters
-                            for (i in parameters.indices) {
-                                preparedStatement.setObject(i + 1, parameters[i])
-                            }
+                dataSource!!.connection.use { connection ->
+                    connection.prepareStatement(query).use { preparedStatement ->
+                        // Set query parameters
+                        for (i in parameters.indices) {
+                            preparedStatement.setObject(i + 1, parameters[i])
+                        }
 
-                            // Execute the query and use the result set
-                            preparedStatement.executeQuery().use { resultSet ->
-                                // Pass the result to the consumer
-                                consumer.complete(QueryResult(connection, preparedStatement, resultSet))
-                            }
+                        // Execute the query and process the result set
+                        preparedStatement.executeQuery().use { resultSet ->
+                            // Process the result using the provided function
+                            return@supplyAsync function(QueryResult(connection, preparedStatement, resultSet))
                         }
                     }
-                } ?: throw IllegalStateException("Data source is null")
-                // Ensure the connection is closed using `use`
+                }
             } catch (e: SQLException) {
-                throw RuntimeException(e)
+                throw RuntimeException("Error executing query", e)
             }
         }
     }
+
 
     fun executeStatement(statementStr: String?, vararg parameters: Any?): CompletableFuture<Boolean> {
         return CompletableFuture.supplyAsync {
