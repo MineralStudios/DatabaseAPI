@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20250320-14.27.07'
-    implementation 'com.zaxxer:HikariCP:6.2.1'
+    implementation 'com.zaxxer:HikariCP:6.3.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
