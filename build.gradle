@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20250422-21.30.06'
+    compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20250503-16.11.42'
     implementation 'com.zaxxer:HikariCP:6.3.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
