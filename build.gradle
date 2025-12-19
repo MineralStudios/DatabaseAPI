@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     compileOnly 'gg.mineral.mineralspigot:mineralspigot-server:20250717-19.37.32'
-    implementation 'com.zaxxer:HikariCP:6.3.0'
+    implementation 'com.zaxxer:HikariCP:7.0.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
@@ -61,5 +61,5 @@ afterEvaluate { project ->
     }
 }
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
